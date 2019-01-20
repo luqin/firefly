@@ -1,33 +1,22 @@
 from __future__ import unicode_literals
+
+import json
 import math
 
 from django.http import HttpResponse
 from django.template import loader
 from pyecharts import Line3D
 
-from . import kline
-
 REMOTE_HOST = "https://pyecharts.github.io/assets/js"
+
+data = {"spam": "foo", "parrot": 42}
 
 
 def index(request):
-    template = loader.get_template('charts/pyecharts.html')
+    template = loader.get_template('demo/demo.html')
     l3d = line3d()
     context = dict(
-        myechart=l3d.render_embed(),
-        host=REMOTE_HOST,
-        script_list=l3d.get_js_dependencies()
-    )
-    return HttpResponse(template.render(context, request))
-
-
-def k(request):
-    template = loader.get_template('charts/pyecharts.html')
-    chart = kline.create_charts(1200, 600)
-    context = dict(
-        myechart=chart.render_embed(),
-        host=REMOTE_HOST,
-        script_list=chart.get_js_dependencies()
+        json=json.dumps(data)
     )
     return HttpResponse(template.render(context, request))
 
