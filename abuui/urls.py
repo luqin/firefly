@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
 import xadmin
 from django.urls import include, path
@@ -30,5 +30,6 @@ xversion.register_models()
 from django.contrib import admin
 
 urlpatterns = [
+    path('charts/', include('apps.charts.urls')),
     path(r'', xadmin.site.urls)
 ]

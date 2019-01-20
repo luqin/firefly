@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'base',
     'runloop',
 
+    'apps.charts',
+
 ]
 
 MIDDLEWARE = [

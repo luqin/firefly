@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+django-crispy-forms = ">=1.6.0"
+django-import-export = ">=0.5.1"
+django-reversion = ">=2.0.0"
+django-formtools = "==2.1"
+future = "==0.15.2"
+httplib2 = "==0.9.2"
+six = "==1.10.0"
+Django = ">=2"
+xadmin = {file = "https://codeload.github.com/sshwsfc/xadmin/zip/django2"}
+pyecharts = "*"
+
+[requires]
+python_version = "3.7"
