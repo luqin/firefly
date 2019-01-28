@@ -9,12 +9,12 @@ from base.models import Stock
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 FACTOR_BUY_CLASSES = (
-    ('AbuFactorBuyBreak', u"海龟买"),
+    ('FactorBuyBreakXd', u"海龟买"),
     ('AbuDoubleMaBuy', u"双均线买"),
 )
 
 FACTOR_SELL_CLASSES = (
-    ('AbuFactorSellBreak', u"海龟卖"),
+    ('FactorSellBreakXd', u"海龟卖"),
     ('AbuDoubleMaSell', u"双均线卖"),
 )
 
@@ -29,7 +29,10 @@ FACTOR_SELL_CLASSES = (
 @python_2_unicode_compatible
 class FactorBuy(models.Model):
     name = models.CharField(max_length=64, verbose_name=u'名称')
-    class_name = models.CharField(max_length=32, choices=FACTOR_BUY_CLASSES, verbose_name=u'策略', editable=False)
+    class_name = models.CharField(max_length=256, choices=FACTOR_BUY_CLASSES, verbose_name=u'策略', editable=False)
+
+    # def to_factor(self):
+    #     return eval(self.class_name)
 
     class Meta:
         verbose_name = u"买策略"
@@ -43,7 +46,7 @@ class FactorBuy(models.Model):
 @python_2_unicode_compatible
 class FactorSell(models.Model):
     name = models.CharField(max_length=64, verbose_name=u'名称')
-    class_name = models.CharField(max_length=32, choices=FACTOR_SELL_CLASSES, verbose_name=u'策略', editable=False)
+    class_name = models.CharField(max_length=256, choices=FACTOR_SELL_CLASSES, verbose_name=u'策略', editable=False)
 
     class Meta:
         verbose_name = u"卖策略"
@@ -65,7 +68,7 @@ class FactorBuyBreakXd(FactorBuy):
         verbose_name_plural = verbose_name
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.class_name = "AbuFactorBuyBreak"
+        self.class_name = "{'xd': %s, 'class': AbuFactorBuyBreak}" % self.xd
         super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
@@ -84,7 +87,7 @@ class FactorSellBreakXd(FactorSell):
         verbose_name_plural = verbose_name
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.class_name = "AbuFactorSellBreak"
+        self.class_name = "{'xd': %s, 'class': AbuFactorSellBreak}" % self.xd
         super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
@@ -94,8 +97,12 @@ class FactorSellBreakXd(FactorSell):
 @python_2_unicode_compatible
 class RunLoopGroup(models.Model):
     name = models.CharField(verbose_name=u"名称", max_length=64)
-    description = models.TextField(verbose_name=u"说明")
+    start = models.DateField(verbose_name=u"开始")
+    end = models.DateField(verbose_name=u"结束")
+    description = models.TextField(verbose_name=u"说明",blank=True)
     status = models.CharField(verbose_name=u"状态", max_length=64, blank=True, default="新建")
+
+    read_cash = models.IntegerField(verbose_name=u"初始化资金")
 
     factor_buys = models.ManyToManyField(
         FactorBuy, verbose_name=u'买策略组合', blank=False, related_name='factor_buy_groups')
@@ -110,3 +117,35 @@ class RunLoopGroup(models.Model):
 
     def __str__(self):
         return '回测名称: %s' % (self.name,)
+
+@python_2_unicode_compatible
+class Orders(models.Model):
+    buy_date = models.CharField(verbose_name=u"买入日期", max_length=64)
+    buy_price = models.CharField(verbose_name=u"买入价格", max_length=64)
+    buy_cnt = models.CharField(verbose_name=u"买入数量", max_length=64)
+    buy_factor = models.CharField(verbose_name=u"买入策略", max_length=64)
+    symbol = models.CharField(verbose_name=u"股票编号", max_length=64)
+    buy_pos = models.CharField(verbose_name=u"买入滑dian", max_length=64)
+    buy_type_str = models.CharField(verbose_name=u"买入类型", max_length=64)
+    expect_direction = models.CharField(verbose_name=u"预期方向", max_length=64)
+    sell_type_extra = models.CharField(verbose_name=u"卖出策略", max_length=64)
+    sell_date = models.CharField(verbose_name=u"卖出日期", max_length=64)
+    sell_price = models.CharField(verbose_name=u"卖出价格", max_length=64)
+    sell_type = models.CharField(verbose_name=u"卖出类型", max_length=64)
+    ml_features = models.CharField(verbose_name=u"MLI特征", max_length=64, blank=True, null=True)
+    key = models.CharField(verbose_name=u"关键字", max_length=64)
+    profit = models.CharField(verbose_name=u"盈利", max_length=64)
+    result = models.CharField(verbose_name=u"结果", max_length=64)
+    profit_cg = models.CharField(verbose_name=u"盈利比", max_length=64)
+    profit_cg_hunder = models.CharField(verbose_name=u"盈利率", max_length=64)
+    keep_days = models.CharField(verbose_name=u"持股天数", max_length=64)
+
+    stock = models.ForeignKey(Stock, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=u"股票")
+    run_loop_group = models.ForeignKey(RunLoopGroup, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=u"回测")
+
+    class Meta:
+        verbose_name = u"回测订单"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return '回测订单: %s' % (self.run_loop_group,)

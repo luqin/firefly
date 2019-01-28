@@ -6,18 +6,18 @@ from .models import Stock
 
 @xadmin.sites.register(Stock)
 class StockAdmin(object):
-    list_display = ("name", )
+    list_display = ("co_name", "symbol", "market")
 
-    list_display_links = ("name",)
+    list_display_links = ("co_name",)
 
-    search_fields = ["name"]
+    search_fields = ["co_name"]
 
     list_filter = [
-        "name"
+        "co_name"
     ]
 
-    list_quick_filter = [{"field": "name", "limit": 10}]
+    list_quick_filter = [{"field": "co_name", "limit": 10}]
 
-    search_fields = ["name"]
+    search_fields = ["co_name"]
 
     reversion_enable = True
