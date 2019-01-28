@@ -1,0 +1,1 @@
+[{"model": "base.stock", "pk": 1, "fields": {"co_name": "\u5317\u4eac\u661f\u7f51", "symbol": "002396", "market": "SZ"}},{"model": "base.stock", "pk": 2, "fields": {"co_name": "科大讯飞", "symbol": "000725", "market": "SZ"}}]
