@@ -3,7 +3,7 @@
 ## 安装
 
 1. 安装pipenv
-    ```
+    ```sh
     pip install pipenv
     ```
 2. 安装依赖
