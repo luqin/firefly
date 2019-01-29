@@ -16,10 +16,10 @@
     ```
 4. 同步数据库
     ```
-    manage.py migrate
+    pipenv run python manage.py migrate
     ```
 
 ## 命令
 
-- `manage.py runserver` 启动
+- `pipenv run python manage.py runserver` 启动
 - `pipenv install ` 安装相关模块并加入到Pipfile
