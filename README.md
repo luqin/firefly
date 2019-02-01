@@ -21,3 +21,7 @@
 ```sh
 python manage.py runserver
 ```
+
+## 命令
+ 
+- `python manage.py migrate myapp --fake` 同步表结构
