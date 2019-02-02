@@ -65,10 +65,10 @@
             },
             formatter: function (params) {
                 var res = params[0].seriesName + ' ' + params[0].name;
-                res += '<br/>  开盘 : ' + params[0].value[0];
-                res += '<br/>  收盘 : ' + params[0].value[1];
-                res += '<br/>  最高 : ' + params[0].value[3];
-                res += '<br/>  最低 : ' + params[0].value[2];
+                res += '<br/>  开盘 : ' + params[0].value[1];
+                res += '<br/>  收盘 : ' + params[0].value[2];
+                res += '<br/>  最高 : ' + params[0].value[4];
+                res += '<br/>  最低 : ' + params[0].value[3];
                 return res;
             }
         },
@@ -166,47 +166,9 @@
                     ],
                     tooltip: {
                         formatter: function (param) {
-                            return param.name + '<br>' + (param.data.coord || '11');
+                            return param.name + '<br>' + (param.data.coord || '');
                         }
                     }
-                },
-                markLine: {
-                    symbol: ['none', 'none'],
-                    data: [
-                        [
-                            {
-                                name: 'from lowest to highest',
-                                type: 'min',
-                                valueDim: 'lowest',
-                                symbol: 'circle',
-                                symbolSize: 10,
-                                label: {
-                                    normal: {show: false},
-                                    emphasis: {show: false}
-                                }
-                            },
-                            {
-                                type: 'max',
-                                valueDim: 'highest',
-                                symbol: 'circle',
-                                symbolSize: 10,
-                                label: {
-                                    normal: {show: false},
-                                    emphasis: {show: false}
-                                }
-                            }
-                        ],
-                        {
-                            name: 'min line on close',
-                            type: 'min',
-                            valueDim: 'close'
-                        },
-                        {
-                            name: 'max line on close',
-                            type: 'max',
-                            valueDim: 'close'
-                        }
-                    ]
                 }
             },
             {
