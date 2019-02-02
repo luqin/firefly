@@ -1,18 +1,21 @@
-# 快速使用
+# firefly
 
 ## 安装
 
+1. 安装依赖
+    ```sh
+    pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+    ```
 1. 安装 xadmin
     ```sh
     pip install https://codeload.github.com/sshwsfc/xadmin/zip/django2
     ```
-2. 安装依赖
-4. 同步数据库
-    ```
+1. 同步数据库
+    ```sh
     python manage.py migrate
     ```
 1. 创建初始化用户
-    ```
+    ```sh
     python manage.py createsuperuser
     ```
 
