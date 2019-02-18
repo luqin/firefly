@@ -64,6 +64,11 @@
                 type: 'cross'
             },
             formatter: function (params) {
+                console.error(params)
+                if (params.componentType === 'markPoint') {
+                    return params.seriesName;
+                }
+
                 var res = params[0].seriesName + ' ' + params[0].name;
                 res += '<br/>  开盘 : ' + params[0].value[1];
                 res += '<br/>  收盘 : ' + params[0].value[2];
@@ -132,43 +137,37 @@
                     }
                 },
                 markPoint: {
+                    symbol: 'path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z', // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z,  path://m 0,0 h 48 v 20 h -34 l -6,10 l -6,-10 h -2 z
+                    symbolSize: function (val, data) {
+                        return [textSize(data.name + ' ' + data.value, "12px").width + 5, 40]
+                    },
+                    symbolOffset: ['34%', '-50%'],
+                    symbolKeepAspect: true, // 如果 symbol 是 path:// 的形式，是否在缩放时保持该图形的长宽比。
                     label: {
-                        normal: {
-                            formatter: function (param) {
-                                return param != null ? Math.round(param.value) : '';
-                            }
+                        position: "insideTop",
+                        distance: 7,
+                        formatter: function (data) {
+                            return data.name + ' ' + data.value;
                         }
                     },
                     data: [
                         {
-                            name: 'XX标点',
-                            coord: ['2013/5/31', 2300],
-                            value: 2300,
+                            name: 'B',
+                            coord: ['2013/2/18', 2420],
+                            value: 2420,
                             itemStyle: {
                                 normal: {color: 'rgb(41,60,85)'}
                             }
                         },
                         {
-                            name: '最大值',
-                            type: 'max',
-                            valueDim: 'highest'
-                        },
-                        {
-                            name: 'lowest value',
-                            type: 'min',
-                            valueDim: 'lowest'
-                        },
-                        {
-                            name: 'average value on close',
-                            type: 'average',
-                            valueDim: 'close'
+                            name: 'S',
+                            coord: ['2013/5/31', 2300],
+                            value: 2300,
+                            itemStyle: {
+                                normal: {color: 'rgb(41,60,85)'}
+                            }
                         }
-                    ],
-                    tooltip: {
-                        formatter: function (param) {
-                            return param.name + '<br>' + (param.data.coord || '');
-                        }
-                    }
+                    ]
                 }
             },
             {
@@ -218,6 +217,31 @@
 
     var myChart = echarts.init(document.getElementById('main'));
     myChart.setOption(option);
+
+    /**
+     * 获取文本宽高
+     * @param text       文本
+     * @param fontSize   代表汉字的大小，英文字会自动按照默认值
+     */
+    function textSize(text, fontSize) {
+        var span = document.createElement("span");
+        var result = {
+            "width": span.offsetWidth,
+            "height": span.offsetHeight
+        };
+        span.style.visibility = "hidden";
+        span.style.fontSize = fontSize || "14px";
+        document.body.appendChild(span);
+
+        if (typeof span.textContent != "undefined")
+            span.textContent = text || "国";
+        else span.innerText = text || "国";
+
+        result.width = span.offsetWidth - result.width;
+        result.height = span.offsetHeight - result.height;
+        span.parentNode.removeChild(span);
+        return result;
+    }
 </script>
 </body>
 

@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.template import loader
 
 
-def index(request):
+def index(request, id):
     template = loader.get_template('charts/k.html')
     runloopData = dict(
         # 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)

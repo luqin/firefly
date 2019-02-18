@@ -81,7 +81,7 @@ class RunLoopGroupAdmin(object):
 
 @xadmin.sites.register(Orders)
 class OrdersAdmin(object):
-    list_display = ("run_loop_group", "stock", "profit", "profit_cg_hunder", "buy_date", "buy_price", "buy_cnt", "buy_factor", "sell_date", "sell_price", "sell_type_extra", "sell_type",)
+    list_display = ("run_loop_group", "stock", "profit", "profit_cg_hunder", "buy_date", "buy_price", "buy_cnt", "buy_factor", "sell_date", "sell_price", "sell_type_extra", "sell_type", 'link',)
     list_display_links = ("stock",)
     # readony_fields = ("status", )
     # exclude = ['status']
@@ -91,6 +91,12 @@ class OrdersAdmin(object):
     search_fields = ["stock"]
 
     reversion_enable = True
+
+    def link(self, instance):
+        return "<a href='%s/result'>%s</a>" % (instance.symbol, '查看')
+    link.short_description = "回测结果"
+    link.allow_tags = True
+    link.is_column = False
 
 # xadmin.sites.site.register(HostGroup, HostGroupAdmin)
 # xadmin.sites.site.register(MaintainLog, MaintainLogAdmin)
