@@ -1,7 +1,16 @@
 from __future__ import absolute_import
 
 import xadmin
+from xadmin import views
 from .models import Stock
+
+
+class GlobalSettings(object):
+    site_title = 'Firefly'  # 修改页眉
+    site_footer = 'Firefly'  # 修改页脚
+
+
+xadmin.site.register(views.CommAdminView, GlobalSettings)
 
 
 @xadmin.sites.register(Stock)
