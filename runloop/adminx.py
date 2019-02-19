@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
+from django.forms import ModelMultipleChoiceField
 from django.utils.translation import ugettext as _
 
 import xadmin
-from .xadmin_action import RunloopAction, GridSearchAction
-from .models import RunLoopGroup, FactorBuy, FactorBuyBreakXd, FactorSellBreakXd, Orders
+from .xadmin_action import RunloopAction
+from .models import RunLoopGroup, Orders
 
 ACTION_NAME = {
     'add': _('Can add %s'),
@@ -14,53 +15,18 @@ ACTION_NAME = {
     'view': _('Can view %s'),
 }
 
-# @xadmin.sites.register(FactorBuy)
-# class FactorBuyAdmin(object):
-#     list_display = ("name",)
-#     list_display_links = ("name",)
-#
-#     list_quick_filter = [{"field": "name", "limit": 10}]
-#
-#     search_fields = ["name"]
-#
-#     reversion_enable = True
+def get_stock_name(p):
+    action = p.codename.split('_')[0]
+    if action in ACTION_NAME:
+        return ACTION_NAME[action] % str(p.content_type)
+    else:
+        return p.co_name
 
 
-@xadmin.sites.register(FactorBuyBreakXd)
-class FactorBuyBreakXdAdmin(object):
-    list_display = ("name", "xd", "class_name")
+class StockModelMultipleChoiceField(ModelMultipleChoiceField):
 
-    list_display_links = ("name",)
-
-    search_fields = ["name"]
-
-    list_filter = [
-        "name"
-    ]
-
-    list_quick_filter = [{"field": "name", "limit": 10}]
-
-    search_fields = ["name"]
-
-    reversion_enable = True
-
-@xadmin.sites.register(FactorSellBreakXd)
-class FactorSellBreakXdAdmin(object):
-    list_display = ("name", "xd", "class_name")
-
-    list_display_links = ("name",)
-
-    search_fields = ["name"]
-
-    list_filter = [
-        "name"
-    ]
-
-    list_quick_filter = [{"field": "name", "limit": 10}]
-
-    search_fields = ["name"]
-
-    reversion_enable = True
+    def label_from_instance(self, p):
+        return get_stock_name(p)
 
 @xadmin.sites.register(RunLoopGroup)
 class RunLoopGroupAdmin(object):
@@ -75,13 +41,24 @@ class RunLoopGroupAdmin(object):
 
     reversion_enable = True
 
-    style_fields = {"factor_buys": "checkbox-inline", "factor_sells": "checkbox-inline"}
+    style_fields = {"factor_buys": "checkbox-inline", "factor_sells": "checkbox-inline", "positions": "radio-inline",
+                    "stocks": "m2m_transfer"}
 
-    actions = [RunloopAction, GridSearchAction]
+    # def get_field_attrs(self, db_field, **kwargs):
+    #     print("db_field", db_field)
+    #     attrs = super(RunLoopGroupAdmin, self).get_field_attrs(db_field, **kwargs)
+    #     if db_field.name == 'stocks':
+    #         attrs['form_class'] = StockModelMultipleChoiceField
+    #     return attrs
+
+    actions = [RunloopAction]
+
 
 @xadmin.sites.register(Orders)
 class OrdersAdmin(object):
-    list_display = ("run_loop_group", "stock", "profit", "profit_cg_hunder", "buy_date", "buy_price", "buy_cnt", "buy_factor", "sell_date", "sell_price", "sell_type_extra", "sell_type",)
+    list_display = (
+        "run_loop_group", "stock", "profit", "profit_cg_hunder", "buy_date", "buy_price", "buy_cnt", "buy_factor",
+        "sell_date", "sell_price", "sell_type_extra", "sell_type",)
     list_display_links = ("stock",)
     # readony_fields = ("status", )
     # exclude = ['status']
