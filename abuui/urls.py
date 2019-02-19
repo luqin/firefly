@@ -30,6 +30,6 @@ xversion.register_models()
 from django.contrib import admin
 
 urlpatterns = [
-    path(r'', include('charts.urls')),
+    path(r'', include('runloop.urls')),
     path(r'', xadmin.site.urls)
 ]

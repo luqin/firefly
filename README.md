@@ -28,4 +28,5 @@ python manage.py runserver
 ## 命令
 
 - `python manage.py migrate myapp --fake` 同步表结构
+- `python manage.py loaddata initial_data.json` 初始化数据
 - `activate` 激活 Anaconda 环境

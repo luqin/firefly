@@ -70,7 +70,7 @@ class OrdersAdmin(object):
     reversion_enable = True
 
     def link(self, instance):
-        return "<a href='%s/result'>%s</a>" % (instance.symbol, '查看')
+        return "<a href='%s/result'>%s</a>" % (instance.id, '查看')
     link.short_description = "回测结果"
     link.allow_tags = True
     link.is_column = False
