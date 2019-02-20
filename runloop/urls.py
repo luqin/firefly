@@ -3,5 +3,5 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('runloop/orders/<int:id>/result/', views.index, name='index'),
+    path('runloop/runloopgroup/<int:id>/k/', views.index, name='index'),
 ]
