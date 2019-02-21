@@ -10,6 +10,10 @@
 <div id="main" style="width: 100%;height:600px;"></div>
 <script src="//cdn.bootcss.com/echarts/4.1.0-release/echarts.min.js"></script>
 <script type="text/javascript">
+    var run_loop_group = {{ run_loop_group|safe }};
+    var orders = {{ orders|safe }};
+    var symbols = {{ symbols|safe }};
+
     var runloopData = {{ runloopData|safe }};
 
 
@@ -64,7 +68,6 @@
                 type: 'cross'
             },
             formatter: function (params) {
-                console.error(params)
                 if (params.componentType === 'markPoint') {
                     return params.seriesName;
                 }
