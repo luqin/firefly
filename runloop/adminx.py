@@ -55,7 +55,7 @@ class RunLoopGroupAdmin(object):
 
     def link(self, instance):
         if instance.status == 'done':
-            return "<a href='%s/k'>%s</a>" % (instance.id, '查看')
+            return "<a href='%s/k' target='_blank'>%s</a>" % (instance.id, '查看')
         else:
             return ""
     link.short_description = "回测结果"

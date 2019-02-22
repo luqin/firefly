@@ -3,18 +3,16 @@
 
 <head>
     <meta charset="utf-8">
-    <title>{{ title }}</title>
+    <title>回测结果 | {{ run_loop_group.name }}</title>
 </head>
 
 <body>
 <div id="main" style="width: 100%;height:600px;"></div>
 <script src="//cdn.bootcss.com/echarts/4.1.0-release/echarts.min.js"></script>
 <script type="text/javascript">
-    var run_loop_group = {{ run_loop_group|safe }};
+    var run_loop_group = {{ run_loop_group_json|safe }};
     var orders = {{ orders|safe }};
-    var symbols = {{ symbols|safe }};
-
-    var runloopData = {{ runloopData|safe }};
+    var k_data = {{ k_data|safe }};
 
 
     var upColor = '#ec0000';
@@ -24,8 +22,32 @@
 
 
     // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
-    var data0 = splitData(runloopData.data);
+    var data0 = splitData(k_data);
 
+    var buyMarkPoint = orders.buy.map(function (order) {
+        var value = order.buy_price;
+        return {
+            name: 'B',
+            coord: [order.buy_date, value],
+            value: value,
+            itemStyle: {
+                normal: {color: 'rgb(41,60,85)'}
+            }
+        }
+    });
+    var sellMarkPoint = orders.sell.map(function (order) {
+        var value = order.sell_price;
+        return {
+            name: 'S',
+            coord: [order.sell_date, value],
+            value: value,
+            itemStyle: {
+                normal: {color: 'rgb(41,60,85)'}
+            }
+        }
+    })
+    var markPoint = [].concat(buyMarkPoint).concat(sellMarkPoint);
+    console.error(orders)
 
     function splitData(rawData) {
         var categoryData = [];
@@ -59,7 +81,7 @@
 
     var option = {
         title: {
-            text: '{{ title }}',
+            text: '回测结果 | {{ run_loop_group.name }}',
             left: 0
         },
         tooltip: {
@@ -140,37 +162,18 @@
                     }
                 },
                 markPoint: {
-                    symbol: 'path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z', // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z,  path://m 0,0 h 48 v 20 h -34 l -6,10 l -6,-10 h -2 z
-                    symbolSize: function (val, data) {
-                        return [textSize(data.name + ' ' + data.value, "12px").width + 5, 40]
-                    },
-                    symbolOffset: ['34%', '-50%'],
+                    // symbol: 'path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z', // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z,  path://m 0,0 h 48 v 20 h -34 l -6,10 l -6,-10 h -2 z
+                    symbol: 'pin',
+                    symbolSize: [25, 30],
                     symbolKeepAspect: true, // 如果 symbol 是 path:// 的形式，是否在缩放时保持该图形的长宽比。
                     label: {
                         position: "insideTop",
-                        distance: 7,
+                        distance: 3,
                         formatter: function (data) {
-                            return data.name + ' ' + data.value;
+                            return data.name;
                         }
                     },
-                    data: [
-                        {
-                            name: 'B',
-                            coord: ['2013/2/18', 2420],
-                            value: 2420,
-                            itemStyle: {
-                                normal: {color: 'rgb(41,60,85)'}
-                            }
-                        },
-                        {
-                            name: 'S',
-                            coord: ['2013/5/31', 2300],
-                            value: 2300,
-                            itemStyle: {
-                                normal: {color: 'rgb(41,60,85)'}
-                            }
-                        }
-                    ]
+                    data: markPoint
                 }
             },
             {
