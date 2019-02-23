@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>回测结果 | {{ run_loop_group.name }}</title>
+    <title>回测结果({{ stock.co_name }}) | {{ run_loop_group.name }}</title>
 </head>
 
 <body>
@@ -91,7 +91,7 @@
 
     var option = {
         title: {
-            text: '回测结果 | {{ run_loop_group.name }}',
+            text: '回测结果({{ stock.co_name }}) | {{ run_loop_group.name }}',
             left: 0
         },
         tooltip: {

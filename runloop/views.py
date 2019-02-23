@@ -17,7 +17,7 @@ def index(request, id):
     run_loop_group = RunLoopGroup.objects.get(id=id)
     orders = Orders.objects.filter(run_loop_group_id=id)
     symbol_ids = get_symbol_ids(orders)
-    stock = Stock.objects.get(symbol=symbol_ids[0]),
+    stock = Stock.objects.get(symbol=symbol_ids[0])
     k_data = get_k_data(symbol_ids, run_loop_group)
     context = dict(
         run_loop_group=run_loop_group,
@@ -36,6 +36,7 @@ def index(request, id):
 
 
 # serializers.serialize("json", orders)
+
 
 def get_orders(orders):
     new_orders = []
@@ -87,23 +88,21 @@ def get_k_data(symbols, run_loop_group):
     start = run_loop_group.start.strftime("%Y-%m-%d")
     end = run_loop_group.end.strftime("%Y-%m-%d")
 
-    print("查询股票k", symbols, start)
-    print("查询股票k", symbols, start, end)
-    kls = ABuSymbolPd.make_kl_df(symbols, data_mode=EMarketDataSplitMode.E_DATA_SPLIT_SE, start=start,
-                                 end=end, show_progress=True)
-    print("查询股票k", symbols, kls)
+    kline = ABuSymbolPd.make_kl_df(symbols, data_mode=EMarketDataSplitMode.E_DATA_SPLIT_SE, start=start,
+                                   end=end, show_progress=True)
+    print("查询股票kline data", symbols, kline)
 
     data = []
     for symbol in symbols:
-        date_array = kls.major_axis.to_pydatetime()
+        date_array = kline.major_axis.to_pydatetime()
         date_only_array = numpy.vectorize(lambda s: s.strftime('%Y-%m-%d'))(date_array)
         for date in date_only_array:
             data.append([
                 date,
-                kls[symbol, date, 'open'],
-                kls[symbol, date, 'close'],
-                kls[symbol, date, 'high'],
-                kls[symbol, date, 'low']
+                kline[symbol, date, 'open'],
+                kline[symbol, date, 'close'],
+                kline[symbol, date, 'high'],
+                kline[symbol, date, 'low']
             ])
 
     return data
