@@ -7,6 +7,3 @@ future==0.15.2
 httplib2==0.9.2
 six==1.10.0
 mysqlclient==1.4.1
-pyecharts==0.5.11
-pyecharts_snapshot==0.1.10
-pyecharts_jupyter_installer==0.0.3
