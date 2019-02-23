@@ -23,31 +23,41 @@
 
     // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
     var data0 = splitData(k_data);
+    var markPoint = getOrderMarkPoints(orders)
 
-    var buyMarkPoint = orders.buy.map(function (order) {
-        var value = order.buy_price;
-        return {
-            name: 'B',
-            coord: [order.buy_date, value],
-            value: value,
-            itemStyle: {
-                normal: {color: 'rgb(41,60,85)'}
+
+    function getOrderMarkPoints(order) {
+        var markPoint = [];
+        orders.forEach(function (order) {
+            var buy_price = order.buy_price;
+            markPoint.push({
+                name: 'B',
+                coord: [order.buy_date, buy_price],
+                value: buy_price,
+                itemStyle: {
+                    normal: {color: '#336699'}
+                }
+            })
+            if (order.sell_type !== 'keep') {
+                var sell_price = order.sell_price;
+                markPoint.push({
+                    name: 'S',
+                    coord: [order.sell_date, sell_price],
+                    value: sell_price,
+                    itemStyle: {
+                        color: '#3399CC'
+                    }
+                })
             }
-        }
-    });
-    var sellMarkPoint = orders.sell.map(function (order) {
-        var value = order.sell_price;
-        return {
-            name: 'S',
-            coord: [order.sell_date, value],
-            value: value,
-            itemStyle: {
-                normal: {color: 'rgb(41,60,85)'}
-            }
-        }
-    })
-    var markPoint = [].concat(buyMarkPoint).concat(sellMarkPoint);
-    console.error(orders)
+        });
+        return markPoint;
+    }
+
+    function findOrderByAttr(orders, name, value) {
+        return orders.filter(function (order) {
+            return order[name] === value;
+        })
+    }
 
     function splitData(rawData) {
         var categoryData = [];
@@ -90,15 +100,31 @@
                 type: 'cross'
             },
             formatter: function (params) {
-                if (params.componentType === 'markPoint') {
-                    return params.seriesName;
-                }
-
-                var res = params[0].seriesName + ' ' + params[0].name;
+                var date = params[0].name;
+                var res = params[0].seriesName + ' ' + date;
                 res += '<br/>  开盘 : ' + params[0].value[1];
                 res += '<br/>  收盘 : ' + params[0].value[2];
                 res += '<br/>  最高 : ' + params[0].value[4];
                 res += '<br/>  最低 : ' + params[0].value[3];
+
+                var buyOrder = findOrderByAttr(orders, 'buy_date', date);
+                buyOrder = buyOrder.length ? buyOrder[0] : null;
+                var sellOrder = findOrderByAttr(orders, 'sell_date', date);
+                sellOrder = sellOrder.length ? sellOrder[0] : null;
+
+                if (buyOrder) {
+                    res += '<br>';
+                    res += '<br> 买入价格：' + buyOrder.buy_price;
+                    res += '<br> 买入数量：' + buyOrder.buy_cnt;
+                }
+                if (sellOrder) {
+                    res += '<br>';
+                    res += '<br> 盈利：' + sellOrder.profit;
+                    res += '<br> 卖出价格：' + sellOrder.sell_price;
+                    res += '<br> 卖出数量：' + sellOrder.buy_cnt;
+                    res += '<br> 卖出类型：' + sellOrder.sell_type;
+                    res += '<br> 持股天数：' + sellOrder.keep_days;
+                }
                 return res;
             }
         },

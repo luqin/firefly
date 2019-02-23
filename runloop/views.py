@@ -15,7 +15,7 @@ from .models import RunLoopGroup
 def index(request, id):
     template = loader.get_template('runloop/k.html')
     run_loop_group = RunLoopGroup.objects.get(id=id)
-    orders = get_orders(id)
+    orders = Orders.objects.filter(run_loop_group_id=id)
     symbol_ids = get_symbol_ids(orders)
     stock = Stock.objects.get(symbol=symbol_ids[0]),
     k_data = get_k_data(symbol_ids, run_loop_group)
@@ -29,7 +29,7 @@ def index(request, id):
         )),
         stock=stock,
         k_data=json.dumps(k_data),
-        orders=json.dumps(get_order_map(orders)),
+        orders=json.dumps(get_orders(orders)),
         symbol_ids=json.dumps(symbol_ids)
     )
     return HttpResponse(template.render(context, request))
@@ -37,31 +37,35 @@ def index(request, id):
 
 # serializers.serialize("json", orders)
 
-def get_orders(run_loop_group_id):
-    orders = Orders.objects.filter(run_loop_group_id=run_loop_group_id)
-    return orders
+def get_orders(orders):
+    new_orders = []
 
-
-def get_order_map(orders):
-    buy = []
-    sell = []
     for order in orders:
         o = dict(
             buy_date=datetime.datetime.strptime(order.buy_date, '%Y%m%d').strftime('%Y-%m-%d'),
             buy_price=order.buy_price,
             buy_cnt=order.buy_cnt,
-        )
-        buy.append(o)
-        o = dict(
-            sell_date=datetime.datetime.strptime(order.sell_date, '%Y%m%d').strftime('%Y-%m-%d'),
+            buy_factor=order.buy_factor,
+            symbol=order.symbol,
+            buy_pos=order.buy_pos,
+            buy_type_str=order.buy_type_str,
+            expect_direction=order.expect_direction,
+            sell_type_extra=order.sell_type_extra,
+            sell_date=datetime.datetime.strptime(order.sell_date, '%Y%m%d').strftime(
+                '%Y-%m-%d') if (order.sell_date and order.sell_date != '0') else order.sell_date,
             sell_price=order.sell_price,
-            sell_cnt=order.buy_cnt,
+            sell_type=order.sell_type,
+            ml_features=order.ml_features,
+            key=order.key,
+            profit=order.profit,
+            result=order.result,
+            profit_cg=order.profit_cg,
+            profit_cg_hunder=order.profit_cg_hunder,
+            keep_days=order.keep_days,
         )
-        sell.append(o)
-    return dict(
-        buy=buy,
-        sell=sell
-    )
+        new_orders.append(o)
+
+    return new_orders
 
 
 # o.buy_date.__format__("%Y-%m-%d")
