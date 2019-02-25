@@ -3,17 +3,17 @@
 
 <head>
     <meta charset="utf-8">
-    <title>回测结果({{ stock.co_name }}) | {{ run_loop_group.name }}</title>
+    <title>回测结果 | {{ run_loop_group.name }}</title>
 </head>
 
 <body>
-<div id="main" style="width: 100%;height:600px;"></div>
 <script src="//cdn.bootcss.com/echarts/4.1.0-release/echarts.min.js"></script>
 <script type="text/javascript">
     var run_loop_group = {{ run_loop_group_json|safe }};
-    var orders = {{ orders|safe }};
-    var k_data = {{ k_data|safe }};
+    var stocks = {{ stocks|safe }};
 
+    var orders = {{ orders|safe }};
+    console.error(stocks)
 
     var upColor = '#ec0000';
     var upBorderColor = '#ec0000';
@@ -21,12 +21,7 @@
     var downBorderColor = '#00da3c';
 
 
-    // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
-    var data0 = splitData(k_data);
-    var markPoint = getOrderMarkPoints(orders)
-
-
-    function getOrderMarkPoints(order) {
+    function getOrderMarkPoints(orders) {
         var markPoint = [];
         orders.forEach(function (order) {
             var buy_price = order.buy_price;
@@ -72,183 +67,206 @@
         };
     }
 
-    function calculateMA(dayCount) {
-        var result = [];
-        for (var i = 0, len = data0.values.length; i < len; i++) {
-            if (i < dayCount) {
-                result.push('-');
-                continue;
-            }
-            var sum = 0;
-            for (var j = 0; j < dayCount; j++) {
-                sum += data0.values[i - j][1];
-            }
-            result.push(sum / dayCount);
-        }
-        return result;
+    function getOrders(orders, symbol) {
+        return orders.filter(function (order) {
+            return order.symbol === symbol;
+        });
     }
 
+    function createChart(stockData) {
+        var ele = document.createElement("div");
+        ele.style.width = '100%';
+        ele.style.height = '600px';
+        document.body.append(ele);
 
-    var option = {
-        title: {
-            text: '回测结果({{ stock.co_name }}) | {{ run_loop_group.name }}',
-            left: 0
-        },
-        tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-                type: 'cross'
-            },
-            formatter: function (params) {
-                var date = params[0].name;
-                var res = params[0].seriesName + ' ' + date;
-                res += '<br/>  开盘 : ' + params[0].value[1];
-                res += '<br/>  收盘 : ' + params[0].value[2];
-                res += '<br/>  最高 : ' + params[0].value[4];
-                res += '<br/>  最低 : ' + params[0].value[3];
 
-                var buyOrder = findOrderByAttr(orders, 'buy_date', date);
-                buyOrder = buyOrder.length ? buyOrder[0] : null;
-                var sellOrder = findOrderByAttr(orders, 'sell_date', date);
-                sellOrder = sellOrder.length ? sellOrder[0] : null;
+        // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
+        var data0 = splitData(stockData.k);
+        stockData.orders = getOrders(orders, stockData.symbol);
+        var markPoint = getOrderMarkPoints(stockData.orders);
 
-                if (buyOrder) {
-                    res += '<br>';
-                    res += '<br> 买入价格：' + buyOrder.buy_price;
-                    res += '<br> 买入数量：' + buyOrder.buy_cnt;
+
+        function calculateMA(dayCount) {
+            var result = [];
+            for (var i = 0, len = data0.values.length; i < len; i++) {
+                if (i < dayCount) {
+                    result.push('-');
+                    continue;
                 }
-                if (sellOrder) {
-                    res += '<br>';
-                    res += '<br> 盈利：' + sellOrder.profit;
-                    res += '<br> 卖出价格：' + sellOrder.sell_price;
-                    res += '<br> 卖出数量：' + sellOrder.buy_cnt;
-                    res += '<br> 卖出类型：' + sellOrder.sell_type;
-                    res += '<br> 持股天数：' + sellOrder.keep_days;
+                var sum = 0;
+                for (var j = 0; j < dayCount; j++) {
+                    sum += data0.values[i - j][1];
                 }
-                return res;
+                result.push(sum / dayCount);
             }
-        },
-        toolbox: {
-            show: true,
-            feature: {
-                mark: {show: true},
-                dataZoom: {show: true},
-                restore: {show: true},
-                saveAsImage: {show: true}
-            }
-        },
-        legend: {
-            data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30']
-        },
-        grid: {
-            left: '5%',
-            right: '5%',
-            bottom: '15%'
-        },
-        xAxis: {
-            type: 'category',
-            data: data0.categoryData,
-            scale: true,
-            boundaryGap: false,
-            axisLine: {onZero: false},
-            splitLine: {show: false},
-            splitNumber: 20,
-            min: 'dataMin',
-            max: 'dataMax'
-        },
-        yAxis: {
-            scale: true,
-            splitLine: {show: true}
-        },
-        dataZoom: [
-            {
-                type: 'inside',
-                start: 0,
-                end: 100
+            return result;
+        }
+
+        var option = {
+            title: {
+                text: '回测结果(' + stockData.name + ') | {{ run_loop_group.name }}',
+                left: 0
             },
-            {
-                show: true,
-                type: 'slider',
-                y: '90%',
-                start: 0,
-                end: 100
-            }
-        ],
-        series: [
-            {
-                name: '日K',
-                type: 'candlestick',
-                data: data0.values,
-                itemStyle: {
-                    normal: {
-                        color: upColor,
-                        color0: downColor,
-                        borderColor: upBorderColor,
-                        borderColor0: downBorderColor
-                    }
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
                 },
-                markPoint: {
-                    // symbol: 'path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z', // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z,  path://m 0,0 h 48 v 20 h -34 l -6,10 l -6,-10 h -2 z
-                    symbol: 'pin',
-                    symbolSize: [25, 30],
-                    symbolKeepAspect: true, // 如果 symbol 是 path:// 的形式，是否在缩放时保持该图形的长宽比。
-                    label: {
-                        position: "insideTop",
-                        distance: 3,
-                        formatter: function (data) {
-                            return data.name;
+                formatter: function (params) {
+                    var date = params[0].name;
+                    var res = params[0].seriesName + ' ' + date;
+                    res += '<br/>  开盘 : ' + params[0].value[1];
+                    res += '<br/>  收盘 : ' + params[0].value[2];
+                    res += '<br/>  最高 : ' + params[0].value[4];
+                    res += '<br/>  最低 : ' + params[0].value[3];
+
+                    var buyOrder = findOrderByAttr(orders, 'buy_date', date);
+                    buyOrder = buyOrder.length ? buyOrder[0] : null;
+                    var sellOrder = findOrderByAttr(orders, 'sell_date', date);
+                    sellOrder = sellOrder.length ? sellOrder[0] : null;
+
+                    if (buyOrder) {
+                        res += '<br>';
+                        res += '<br> 买入价格：' + buyOrder.buy_price;
+                        res += '<br> 买入数量：' + buyOrder.buy_cnt;
+                    }
+                    if (sellOrder) {
+                        res += '<br>';
+                        res += '<br> 盈利：' + sellOrder.profit;
+                        res += '<br> 卖出价格：' + sellOrder.sell_price;
+                        res += '<br> 卖出数量：' + sellOrder.buy_cnt;
+                        res += '<br> 卖出类型：' + sellOrder.sell_type;
+                        res += '<br> 持股天数：' + sellOrder.keep_days;
+                    }
+                    return res;
+                }
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    mark: {show: true},
+                    dataZoom: {show: true},
+                    restore: {show: true},
+                    saveAsImage: {show: true}
+                }
+            },
+            legend: {
+                data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30']
+            },
+            grid: {
+                left: '5%',
+                right: '5%',
+                bottom: '15%'
+            },
+            xAxis: {
+                type: 'category',
+                data: data0.categoryData,
+                scale: true,
+                boundaryGap: false,
+                axisLine: {onZero: false},
+                splitLine: {show: false},
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            yAxis: {
+                scale: true,
+                splitLine: {show: true}
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    start: 0,
+                    end: 100
+                },
+                {
+                    show: true,
+                    type: 'slider',
+                    y: '90%',
+                    start: 0,
+                    end: 100
+                }
+            ],
+            series: [
+                {
+                    name: '日K',
+                    type: 'candlestick',
+                    data: data0.values,
+                    itemStyle: {
+                        normal: {
+                            color: upColor,
+                            color0: downColor,
+                            borderColor: upBorderColor,
+                            borderColor0: downBorderColor
                         }
                     },
-                    data: markPoint
-                }
-            },
-            {
-                name: 'MA5',
-                type: 'line',
-                data: calculateMA(5),
-                smooth: true,
-                showSymbol: false,
-                lineStyle: {
-                    normal: {opacity: 0.5}
-                }
-            },
-            {
-                name: 'MA10',
-                type: 'line',
-                data: calculateMA(10),
-                smooth: true,
-                showSymbol: false,
-                lineStyle: {
-                    normal: {opacity: 0.5}
-                }
-            },
-            {
-                name: 'MA20',
-                type: 'line',
-                data: calculateMA(20),
-                smooth: true,
-                showSymbol: false,
-                lineStyle: {
-                    normal: {opacity: 0.5}
-                }
-            },
-            {
-                name: 'MA30',
-                type: 'line',
-                data: calculateMA(30),
-                smooth: true,
-                showSymbol: false,
-                lineStyle: {
-                    normal: {opacity: 0.5}
-                }
-            },
+                    markPoint: {
+                        // symbol: 'path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z', // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', path://m 0,0 h 48 v 20 h -30 l -6,10 l -6,-10 h -6 z,  path://m 0,0 h 48 v 20 h -34 l -6,10 l -6,-10 h -2 z
+                        symbol: 'pin',
+                        symbolSize: [25, 30],
+                        symbolKeepAspect: true, // 如果 symbol 是 path:// 的形式，是否在缩放时保持该图形的长宽比。
+                        label: {
+                            position: "insideTop",
+                            distance: 3,
+                            formatter: function (data) {
+                                return data.name;
+                            }
+                        },
+                        data: markPoint
+                    }
+                },
+                {
+                    name: 'MA5',
+                    type: 'line',
+                    data: calculateMA(5),
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: {
+                        normal: {opacity: 0.5}
+                    }
+                },
+                {
+                    name: 'MA10',
+                    type: 'line',
+                    data: calculateMA(10),
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: {
+                        normal: {opacity: 0.5}
+                    }
+                },
+                {
+                    name: 'MA20',
+                    type: 'line',
+                    data: calculateMA(20),
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: {
+                        normal: {opacity: 0.5}
+                    }
+                },
+                {
+                    name: 'MA30',
+                    type: 'line',
+                    data: calculateMA(30),
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: {
+                        normal: {opacity: 0.5}
+                    }
+                },
 
-        ]
-    };
+            ]
+        };
 
 
-    var myChart = echarts.init(document.getElementById('main'));
-    myChart.setOption(option);
+        var myChart = echarts.init(ele);
+        myChart.setOption(option);
+    }
+
+    stocks.forEach(function (stock) {
+        createChart(stock);
+    });
 
     /**
      * 获取文本宽高

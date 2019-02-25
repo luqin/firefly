@@ -15,6 +15,7 @@ ACTION_NAME = {
     'view': _('Can view %s'),
 }
 
+
 def get_stock_name(p):
     action = p.codename.split('_')[0]
     if action in ACTION_NAME:
@@ -27,6 +28,7 @@ class StockModelMultipleChoiceField(ModelMultipleChoiceField):
 
     def label_from_instance(self, p):
         return get_stock_name(p)
+
 
 @xadmin.sites.register(RunLoopGroup)
 class RunLoopGroupAdmin(object):
@@ -55,10 +57,12 @@ class RunLoopGroupAdmin(object):
 
     def link(self, instance):
         if instance.status == 'done':
-            return "<a href='%s/k' target='_blank'>%s</a>" % (instance.id, '查看')
+            return "<a href='%s/k' target='_blank'>%s</a>" % (
+                instance.id, '买卖点') + "&nbsp;<a href='%s/returns' target='_blank'>%s</a>" % (instance.id, '收益')
         else:
             return ""
-    link.short_description = "回测结果"
+
+    link.short_description = '<div style="width: 100px;">报表</div>'
     link.allow_tags = True
     link.is_column = False
 
