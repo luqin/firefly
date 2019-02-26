@@ -21,28 +21,49 @@
     var downBorderColor = '#00da3c';
 
 
-    function getOrderMarkPoints(orders) {
+    function getOrderMarkPoints(categoryData, orders) {
         var markPoint = [];
+
+        categoryData.forEach(function (date) {
+            // var buyOrders = findOrderByAttr(orders, 'buy_date', date);
+            var sellOrders = findOrderByAttr(orders, 'sell_date', date);
+
+            var ids = sellOrders.filter(function (order) {
+                return order.sell_type !== 'keep';
+            }).map(function (order) {
+                return order.id;
+            });
+            if (ids.length) {
+                var sell_price = sellOrders[0].sell_price;
+                markPoint.push({
+                    name: 'S(' + ids + ')',
+                    coord: [date, sell_price],
+                    value: sell_price,
+                    itemStyle: {
+                        color: '#3399CC'
+                    },
+                    label: {
+                        color: '#000'
+                    }
+                });
+            }
+        });
+
         orders.forEach(function (order) {
             var buy_price = order.buy_price;
             markPoint.push({
-                name: 'B' + order.id,
+                name: 'B(' + order.id + ')',
                 coord: [order.buy_date, buy_price],
                 value: buy_price,
                 itemStyle: {
                     normal: {color: '#336699'}
+                },
+                label: {
+                    color: '#000'
                 }
-            })
+            });
             if (order.sell_type !== 'keep') {
                 var sell_price = order.sell_price;
-                markPoint.push({
-                    name: 'S',
-                    coord: [order.sell_date, sell_price],
-                    value: sell_price,
-                    itemStyle: {
-                        color: '#3399CC'
-                    }
-                })
             }
         });
         return markPoint;
@@ -83,7 +104,7 @@
         // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
         var data0 = splitData(stockData.k);
         stockData.orders = getOrders(orders, stockData.symbol);
-        var markPoint = getOrderMarkPoints(stockData.orders);
+        var markPoint = getOrderMarkPoints(data0.categoryData, stockData.orders);
 
 
         function calculateMA(dayCount) {
@@ -102,6 +123,42 @@
             return result;
         }
 
+        function tooltipFormatter(params) {
+            var date = params[0].name;
+            var res = params[0].seriesName + ' ' + date;
+            res += '<br/>  开盘 : ' + params[0].value[1];
+            res += '<br/>  收盘 : ' + params[0].value[2];
+            res += '<br/>  最高 : ' + params[0].value[4];
+            res += '<br/>  最低 : ' + params[0].value[3];
+
+            var buyOrders = findOrderByAttr(stockData.orders, 'buy_date', date);
+            var sellOrders = findOrderByAttr(stockData.orders, 'sell_date', date);
+
+            if (buyOrders.length) {
+                res += '<br>';
+                buyOrders.forEach(function (buyOrder) {
+                    res += '<br> 买入单号：' + buyOrder.id;
+                    res += '&nbsp;';
+                    res += ' 买入价格：' + buyOrder.buy_price;
+                    res += ' 买入数量：' + buyOrder.buy_cnt;
+                });
+            }
+            if (sellOrders.length) {
+                res += '<br>';
+                sellOrders.forEach(function (sellOrder) {
+                    res += '<br> 卖出单号：' + sellOrder.id;
+                    res += '&nbsp;';
+                    res += ' 盈利：' + sellOrder.profit;
+                    res += ' 卖出价格：' + sellOrder.sell_price;
+                    res += ' 卖出数量：' + sellOrder.buy_cnt;
+                    // res += '<br> 持股天数：' + sellOrder.keep_days;
+                });
+            }
+            return res;
+        }
+
+        console.error(data0)
+
         var option = {
             title: {
                 text: '回测结果(' + stockData.name + ') | {{ run_loop_group.name }}',
@@ -112,39 +169,7 @@
                 axisPointer: {
                     type: 'cross'
                 },
-                formatter: function (params) {
-                    var date = params[0].name;
-                    var res = params[0].seriesName + ' ' + date;
-                    res += '<br/>  开盘 : ' + params[0].value[1];
-                    res += '<br/>  收盘 : ' + params[0].value[2];
-                    res += '<br/>  最高 : ' + params[0].value[4];
-                    res += '<br/>  最低 : ' + params[0].value[3];
-
-                    var buyOrders = findOrderByAttr(stockData.orders, 'buy_date', date);
-                    var sellOrders = findOrderByAttr(stockData.orders, 'sell_date', date);
-
-                    if (buyOrders.length) {
-                        res += '<br>';
-                        buyOrders.forEach(function (buyOrder) {
-                            res += '<br> 买入单号：' + buyOrder.id;
-                            res += '&nbsp;';
-                            res += ' 买入价格：' + buyOrder.buy_price;
-                            res += ' 买入数量：' + buyOrder.buy_cnt;
-                        });
-                    }
-                    if (sellOrders.length) {
-                        res += '<br>';
-                        sellOrders.forEach(function (sellOrder) {
-                            res += '<br> 卖出单号：' + sellOrder.id;
-                            res += '&nbsp;';
-                            res += ' 盈利：' + sellOrder.profit;
-                            res += ' 卖出价格：' + sellOrder.sell_price;
-                            res += ' 卖出数量：' + sellOrder.buy_cnt;
-                            // res += '<br> 持股天数：' + sellOrder.keep_days;
-                        });
-                    }
-                    return res;
-                }
+                formatter: tooltipFormatter
             },
             toolbox: {
                 show: true,
