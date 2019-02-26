@@ -26,7 +26,7 @@
         orders.forEach(function (order) {
             var buy_price = order.buy_price;
             markPoint.push({
-                name: 'B',
+                name: 'B' + order.id,
                 coord: [order.buy_date, buy_price],
                 value: buy_price,
                 itemStyle: {
@@ -120,23 +120,28 @@
                     res += '<br/>  最高 : ' + params[0].value[4];
                     res += '<br/>  最低 : ' + params[0].value[3];
 
-                    var buyOrder = findOrderByAttr(orders, 'buy_date', date);
-                    buyOrder = buyOrder.length ? buyOrder[0] : null;
-                    var sellOrder = findOrderByAttr(orders, 'sell_date', date);
-                    sellOrder = sellOrder.length ? sellOrder[0] : null;
+                    var buyOrders = findOrderByAttr(stockData.orders, 'buy_date', date);
+                    var sellOrders = findOrderByAttr(stockData.orders, 'sell_date', date);
 
-                    if (buyOrder) {
+                    if (buyOrders.length) {
                         res += '<br>';
-                        res += '<br> 买入价格：' + buyOrder.buy_price;
-                        res += '<br> 买入数量：' + buyOrder.buy_cnt;
+                        buyOrders.forEach(function (buyOrder) {
+                            res += '<br> 买入单号：' + buyOrder.id;
+                            res += '&nbsp;';
+                            res += ' 买入价格：' + buyOrder.buy_price;
+                            res += ' 买入数量：' + buyOrder.buy_cnt;
+                        });
                     }
-                    if (sellOrder) {
+                    if (sellOrders.length) {
                         res += '<br>';
-                        res += '<br> 盈利：' + sellOrder.profit;
-                        res += '<br> 卖出价格：' + sellOrder.sell_price;
-                        res += '<br> 卖出数量：' + sellOrder.buy_cnt;
-                        res += '<br> 卖出类型：' + sellOrder.sell_type;
-                        res += '<br> 持股天数：' + sellOrder.keep_days;
+                        sellOrders.forEach(function (sellOrder) {
+                            res += '<br> 卖出单号：' + sellOrder.id;
+                            res += '&nbsp;';
+                            res += ' 盈利：' + sellOrder.profit;
+                            res += ' 卖出价格：' + sellOrder.sell_price;
+                            res += ' 卖出数量：' + sellOrder.buy_cnt;
+                            // res += '<br> 持股天数：' + sellOrder.keep_days;
+                        });
                     }
                     return res;
                 }

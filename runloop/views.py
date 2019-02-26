@@ -77,6 +77,7 @@ def get_orders(orders):
 
     for order in orders:
         o = dict(
+            id=order.pk,
             buy_date=datetime.datetime.strptime(order.buy_date, '%Y%m%d').strftime('%Y-%m-%d'),
             buy_price=order.buy_price,
             buy_cnt=order.buy_cnt,
