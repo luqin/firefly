@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import json
 
+import pandas as pd
 import numpy
 from django.http import HttpResponse
 from django.template import loader
@@ -13,12 +14,15 @@ from .models import RunLoopGroup
 
 
 def returns(request, id):
-    template = loader.get_template('runloop/k.html')
+    template = loader.get_template('runloop/returns.html')
     run_loop_group = RunLoopGroup.objects.get(id=id)
     orders = Orders.objects.filter(run_loop_group_id=id)
-    symbol_ids = get_symbol_ids(orders)
-    stock = Stock.objects.get(symbol=symbol_ids[0])
-    k_data = get_k_data(symbol_ids, run_loop_group)
+
+    datetimes = pd.date_range(run_loop_group.start.strftime("%Y-%m-%d"),
+                              run_loop_group.end.strftime("%Y-%m-%d")).to_pydatetime()
+    date_array = map(lambda s: s.strftime('%Y-%m-%d'), datetimes)
+    date_array = list(date_array)
+
     context = dict(
         run_loop_group=run_loop_group,
         run_loop_group_json=json.dumps(dict(
@@ -27,26 +31,10 @@ def returns(request, id):
             start=run_loop_group.start.__format__("%Y-%m-%d"),
             end=run_loop_group.end.__format__("%Y-%m-%d"),
         )),
-        stock=stock,
-        k_data=json.dumps(k_data),
         orders=json.dumps(get_orders(orders)),
-        symbol_ids=json.dumps(symbol_ids)
+        dates=date_array,
     )
     return HttpResponse(template.render(context, request))
-
-
-def get_stocks(symbol_ids, start, end):
-    stocks = []
-    stock_ks = get_k_data(symbol_ids, start, end)
-    for symbol in symbol_ids:
-        stock = Stock.objects.get(symbol=symbol)
-        stock_data = dict(
-            name=stock.co_name,
-            symbol=symbol,
-            k=stock_ks[symbol]
-        )
-        stocks.append(stock_data)
-    return stocks
 
 
 def k(request, id):
@@ -70,6 +58,20 @@ def k(request, id):
 
 
 # serializers.serialize("json", orders)
+
+
+def get_stocks(symbol_ids, start, end):
+    stocks = []
+    stock_ks = get_k_data(symbol_ids, start, end)
+    for symbol in symbol_ids:
+        stock = Stock.objects.get(symbol=symbol)
+        stock_data = dict(
+            name=stock.co_name,
+            symbol=symbol,
+            k=stock_ks[symbol]
+        )
+        stocks.append(stock_data)
+    return stocks
 
 
 def get_orders(orders):

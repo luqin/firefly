@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>收益 | {{ run_loop_group.name }}</title>
+</head>
+
+<body>
+<script src="//cdn.bootcss.com/echarts/4.1.0-release/echarts.min.js"></script>
+<script type="text/javascript">
+    var run_loop_group = {{ run_loop_group_json|safe }};
+
+    var dates = {{ dates|safe }};
+    var orders = {{ orders|safe }};
+
+
+    function findOrderByAttr(orders, name, value) {
+        return orders.filter(function (order) {
+            return order[name] === value;
+        })
+    }
+
+    function getOrders(orders, symbol) {
+        return orders.filter(function (order) {
+            return order.symbol === symbol;
+        });
+    }
+
+    /**
+     * 查询指定日期盈利
+     */
+    function getProfitByDate(date) {
+        var sellOrders = findOrderByAttr(orders, 'sell_date', date);
+        return sellOrders.reduce(function (total, order) {
+            return Number(order.profit) + total;
+        }, 0);
+    }
+
+    function getData() {
+        var valueByDate = dates.map(function (date) {
+            return getProfitByDate(date);
+        });
+
+        return valueByDate.map(function (value, index) {
+            return valueByDate.slice(0, index + 1).reduce(function (total, val) {
+                return val + total;
+            }, 0);
+        });
+    }
+
+    function createChart(stockData) {
+        var ele = document.createElement("div");
+        ele.style.width = '100%';
+        ele.style.height = '600px';
+        document.body.append(ele);
+
+
+        function tooltipFormatter(params) {
+            var lineParam = params[0];
+            var date = lineParam.name;
+            var res = date;
+            res += '<br/>  当日收益 : ' + getProfitByDate(date);
+            res += '<br/>  累计收益 : ' + lineParam.value;
+            return res;
+        }
+
+
+        var option = {
+            title: {
+                text: '收益 | {{ run_loop_group.name }}',
+                left: 0
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                },
+                formatter: tooltipFormatter
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    mark: {show: true},
+                    dataZoom: {show: true},
+                    restore: {show: true},
+                    saveAsImage: {show: true}
+                }
+            },
+            grid: {
+                left: '5%',
+                right: '5%',
+                bottom: '15%'
+            },
+            xAxis: {
+                type: 'category',
+                data: dates,
+                scale: true,
+                boundaryGap: false,
+                axisLine: {onZero: false},
+                splitLine: {show: false},
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            yAxis: {
+                scale: true,
+                splitLine: {show: true}
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    start: 0,
+                    end: 100
+                },
+                {
+                    show: true,
+                    type: 'slider',
+                    y: '90%',
+                    start: 0,
+                    end: 100
+                }
+            ],
+            series: [
+                {
+                    name: '收益',
+                    type: 'line',
+                    data: getData(),
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: {}
+                }
+            ]
+        };
+
+
+        var myChart = echarts.init(ele);
+        myChart.setOption(option);
+    }
+
+
+    createChart();
+
+    /**
+     * 获取文本宽高
+     * @param text       文本
+     * @param fontSize   代表汉字的大小，英文字会自动按照默认值
+     */
+    function textSize(text, fontSize) {
+        var span = document.createElement("span");
+        var result = {
+            "width": span.offsetWidth,
+            "height": span.offsetHeight
+        };
+        span.style.visibility = "hidden";
+        span.style.fontSize = fontSize || "14px";
+        document.body.appendChild(span);
+
+        if (typeof span.textContent != "undefined")
+            span.textContent = text || "国";
+        else span.innerText = text || "国";
+
+        result.width = span.offsetWidth - result.width;
+        result.height = span.offsetHeight - result.height;
+        span.parentNode.removeChild(span);
+        return result;
+    }
+</script>
+</body>
+
+</html>

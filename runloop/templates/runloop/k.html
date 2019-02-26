@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>回测结果 | {{ run_loop_group.name }}</title>
+    <title>买卖点 | {{ run_loop_group.name }}</title>
 </head>
 
 <body>
@@ -13,7 +13,6 @@
     var stocks = {{ stocks|safe }};
 
     var orders = {{ orders|safe }};
-    console.error(stocks)
 
     var upColor = '#ec0000';
     var upBorderColor = '#ec0000';
@@ -156,8 +155,6 @@
             }
             return res;
         }
-
-        console.error(data0)
 
         var option = {
             title: {
